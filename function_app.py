@@ -8,6 +8,25 @@ import pyodbc #for sql connections
 from azure.servicebus import ServiceBusClient, ServiceBusMessage # in order to use azure service bus 
 from openai import AzureOpenAI #for using openai services 
 
+#Azure Blob Storage connection string
+connection_string_blob = os.environ.get('BlobStorageConnString')
+
+#Azure service bus connection string 
+connection_string_servicebus = os.environ.get('servicebusConnectionString')
+
+#OpenAI Details 
+client = AzureOpenAI(
+  api_key = os.environ.get('AzureOpenAI_pi_key')
+  api_version = "2024-02-01",
+  azure_endpoint = "https://openaisponsorship.openai.azure.com/"
+)
+
+# Define connection details
+server = 'medicalanalysis-sqlserver.database.windows.net'
+database = 'medicalanalysis'
+username = os.environ.get('sql_username')
+password = os.environ.get('sql_password')
+driver= '{ODBC Driver 18 for SQL Server}'
 
 app = func.FunctionApp()
 
