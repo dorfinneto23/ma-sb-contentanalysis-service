@@ -37,7 +37,8 @@ def openai_content_analysis(path, caseid):
         container_client = blob_service_client.get_container_client(container_name)
         blob_client = container_client.get_blob_client(path)
         download_stream = blob_client.download_blob()
-        logging.info(f"data from the txt file is {download_stream}")
+        filecontent  = download_stream.read()
+        logging.info(f"data from the txt file is {filecontent}")
         #preparing data for response 
         data = { 
             "status" : "success", 
