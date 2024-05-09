@@ -6,7 +6,7 @@ import io # in order to download pdf to memory and write into memory without dis
 import json # in order to use json 
 import pyodbc #for sql connections 
 from azure.servicebus import ServiceBusClient, ServiceBusMessage # in order to use azure service bus 
-#from openai import AzureOpenAI #for using openai services 
+from openai import AzureOpenAI #for using openai services 
 
 #Azure Blob Storage connection string
 connection_string_blob = os.environ.get('BlobStorageConnString')
