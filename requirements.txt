@@ -6,4 +6,4 @@ azure-functions
 azure.storage.blob
 pyodbc
 azure.servicebus
-#openai
+openai
