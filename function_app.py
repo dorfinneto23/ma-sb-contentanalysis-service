@@ -15,11 +15,11 @@ connection_string_blob = os.environ.get('BlobStorageConnString')
 connection_string_servicebus = os.environ.get('servicebusConnectionString')
 
 #OpenAI Details 
-#client = AzureOpenAI(
-#  api_key = os.environ.get('AzureOpenAI_pi_key')
-#  api_version = "2024-02-01",
-#  azure_endpoint = "https://openaisponsorship.openai.azure.com/"
-#)
+client = AzureOpenAI(
+  api_key = os.environ.get('AzureOpenAI_pi_key'),
+  api_version = "2024-02-01",
+  azure_endpoint = "https://openaisponsorship.openai.azure.com/"
+)
 
 # Define connection details
 server = 'medicalanalysis-sqlserver.database.windows.net'
