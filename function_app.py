@@ -39,6 +39,66 @@ def openai_content_analysis(path, caseid):
         download_stream = blob_client.download_blob()
         filecontent  = download_stream.read().decode('utf-8')
         logging.info(f"data from the txt file is {filecontent}")
+        mission = f"The mission based on the uploaded file is as follows:\n{filecontent}\nPlease provide insights based on this information."
+        #chat request for content analysis 
+        response = client.chat.completions.create(
+                    model="proofitGPT4", # model = "deployment_name".
+                    response_format={ "type": "json_object" },
+                    messages=[
+                        {"role": "system", "content": mission},
+                        {"role": "user", "content": """**Task Summary:**
+                            Your task is to review a set of files to identify and document medical information. You need to extract:
+                            - Diagnosis summaries
+                            - Severity, stage, or level of each diagnosis, if available
+                            - Diagnosis dates, if mentioned
+                            - Prescribed or recommended treatments
+                            **Step-by-Step Guide:**
+                            1. **Review Files:** Carefully examine all provided files to find any medical diagnoses.
+                            2. **Extract Information:** Record the following for each diagnosis:
+                            - Diagnosis name.
+                            - Severity, stage, or level (if specified).
+                            - Date of diagnosis (if mentioned).
+                            - Recommended or current treatments.
+                            3. **Categorize Diagnoses:** Group the extracted diagnoses into the following clinical areas:
+                            - Blood_and_Coagulation
+                            - Cardiovascular
+                            - Diabetes 
+                            - Neurology
+                            - Skin_and_Scars
+                            - Endocrinology_excluding_Diabetes
+                            - Gastroenterology
+                            - Ears
+                            - Lungs_excluding_Asthma
+                            - Asthma
+                            - Eyes
+                            - Visual_Impairment
+                            - Oral_and_Maxillofacial
+                            - Psychiatry_and_ADHD
+                            - Urogenital
+                            - Orthopedics_and_Trauma
+                            - Nose_Mouth_and_Throat
+                            - Organ_Transplantation
+                            4. **Prepare JSON Output:** Organize the collected information into a JSON format with the following structure:
+                            - File number
+                            - Diagnosis details, including name, diagnosis date, severity/level/stage, and treatment
+                            - Associated clinical area
+                            **Example JSON Structure:**
+                            {
+                            "FileNumber": "123456",
+                            "Diagnoses": [
+                                {
+                                "Diagnosis": "Diabetes",
+                                "DateOfDiagnosis": "1998",
+                                "LevelStageSeverity": "episode of metabolic acidosis",
+                                "Treatment": "insulin dependent",
+                                "ClinicalArea": "Diabetes"
+                                }
+                            ]
+                            }
+                            """}
+                    ]
+                )
+        logging.info(f"Response from openai: {response.choices[0].message.content}")
         #preparing data for response 
         data = { 
             "status" : "success", 
@@ -69,7 +129,7 @@ def sbcontentanalysisservice(azservicebus: func.ServiceBusMessage):
     url = message_data_dict['url']
     filename = message_data_dict['filename']
     openai_result = openai_content_analysis(path,caseid)
-    logging.info(f"Received messageesds: {openai_result}")
+    
 
 
 
