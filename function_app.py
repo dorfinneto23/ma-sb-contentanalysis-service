@@ -155,7 +155,7 @@ def sbcontentanalysisservice(azservicebus: func.ServiceBusMessage):
         logging.info(f"openai_content: {openai_content}")
         save_openai_response(openai_content,caseid,filename)
     else: 
-        logging.info(f"openai not content response - error")
+        logging.info(f"openai not content response - error, {openai_result}")
     
 
 
