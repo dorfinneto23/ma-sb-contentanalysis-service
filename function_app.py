@@ -30,14 +30,14 @@ driver= '{ODBC Driver 18 for SQL Server}'
 
 
 # Generic Function to update documents  in the 'documents' table
-def update_documents_generic(doc_id,field,value):
+def update_documents_generic(doc_id,field,value,field2,value2):
     try:
         # Establish a connection to the Azure SQL database
         conn = pyodbc.connect('DRIVER='+driver+';SERVER='+server+';DATABASE='+database+';UID='+username+';PWD='+ password)
         cursor = conn.cursor()
 
         # Insert new case data into the 'cases' table
-        cursor.execute(f"UPDATE documents SET {field} = ? WHERE id = ?", (value, doc_id))
+        cursor.execute(f"UPDATE documents SET {field} = ?,{field2} = ? WHERE id = ?", (value, value2, doc_id))
         conn.commit()
 
         # Close connections
@@ -207,6 +207,7 @@ def sbcontentanalysisservice(azservicebus: func.ServiceBusMessage):
         # Concatenate unique ClinicalArea values into a single string
         clinical_areas_concatenated = ';'.join(clinical_areas)
         logging.info(f"clinical_areas_concatenated: {clinical_areas_concatenated}")
+        update_documents_generic(doc_id,"contentanalysis",openai_content_cleaned,"clinicalAreas",clinical_areas_concatenated)
 
     else: 
         logging.info(f"openai not content response - error message, {openai_result}")
