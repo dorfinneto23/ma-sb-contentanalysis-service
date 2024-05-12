@@ -184,7 +184,7 @@ def sbcontentanalysisservice(azservicebus: func.ServiceBusMessage):
         logging.info(f"clinical_areas_concatenated: {clinical_areas_concatenated}")
 
     else: 
-        logging.info(f"openai not content response - error, {openai_result}")
+        logging.info(f"openai not content response - error message, {openai_result}")
     
 
 
