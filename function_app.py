@@ -102,6 +102,7 @@ def openai_content_analysis(path, caseid):
         #preparing data for response 
         data = { 
             "status" : "success", 
+            "response" : {response.choices[0].message.content},
             "Description" : f"content analysis sucess"
         } 
         json_data = json.dumps(data)
@@ -110,6 +111,7 @@ def openai_content_analysis(path, caseid):
         #preparing data for response 
         data = { 
             "status" : "error", 
+            "response" : "Not respose",
             "Description" : f"{str(e)}"
         } 
         json_data = json.dumps(data)
@@ -129,6 +131,12 @@ def sbcontentanalysisservice(azservicebus: func.ServiceBusMessage):
     url = message_data_dict['url']
     filename = message_data_dict['filename']
     openai_result = openai_content_analysis(path,caseid)
+    openai_result_dict = json.loads(openai_result) 
+    if openai_result_dict['status']=="success":
+        openai_content = openai_result_dict['status']
+        logging.info(f"openai_content: {openai_content}")
+    else: 
+        logging.info(f"openai not content response - error")
     
 
 
