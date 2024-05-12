@@ -28,6 +28,24 @@ username = os.environ.get('sql_username')
 password = os.environ.get('sql_password')
 driver= '{ODBC Driver 18 for SQL Server}'
 
+#save openai content response 
+def save_openai_response(content,caseid,filename):
+    try:
+        container_name = "medicalanalysis"
+        main_folder_name = "cases"
+        folder_name="case-"+caseid
+        blob_service_client = BlobServiceClient.from_connection_string(connection_string_blob)
+        container_client = blob_service_client.get_container_client(container_name)
+        basicPath = f"{main_folder_name}/{folder_name}"
+        destinationPath = f"{basicPath}/openai/{filename}"
+        blob_client = container_client.upload_blob(name=destinationPath, data=content)
+        logging.info(f"the openai content file url is: {blob_client.url}")
+    
+    except Exception as e:
+        print("An error occurred:", str(e))
+
+
+
 #Openai function - content analysis
 def openai_content_analysis(path, caseid):
     try:
@@ -135,6 +153,7 @@ def sbcontentanalysisservice(azservicebus: func.ServiceBusMessage):
     if openai_result_dict['status']=="success":
         openai_content = openai_result_dict['status']
         logging.info(f"openai_content: {openai_content}")
+        save_openai_response(openai_content,caseid,filename)
     else: 
         logging.info(f"openai not content response - error")
     
