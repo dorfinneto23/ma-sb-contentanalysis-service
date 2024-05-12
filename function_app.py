@@ -173,7 +173,7 @@ def sbcontentanalysisservice(azservicebus: func.ServiceBusMessage):
     openai_result = openai_content_analysis(path,caseid)
     openai_result_dict = json.loads(openai_result) 
     if openai_result_dict['status']=="success":
-        openai_content = openai_result_dict['status']
+        openai_content = openai_result_dict['response']
         logging.info(f"openai_content: {openai_content}")
         save_openai_response(openai_content,caseid,filename)
     else: 
