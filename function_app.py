@@ -142,7 +142,7 @@ def openai_content_analysis(path, caseid):
         #preparing data for response 
         data = { 
             "status" : "success", 
-            "response" : {response.choices[0].message.content},
+            "response" : response.choices[0].message.content,
             "Description" : f"content analysis sucess"
         } 
         json_data = json.dumps(data)
