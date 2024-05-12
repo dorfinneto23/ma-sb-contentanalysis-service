@@ -49,6 +49,30 @@ def update_documents_generic(doc_id,field,value):
     except Exception as e:
         logging.error(f"Error update case: {str(e)}")
         return False  
+    
+# Clean Json string - clean spaces  
+def clean_json(json_string):
+    # Parse the JSON string into a Python dictionary
+    data = json.loads(json_string)
+
+    # Function to recursively remove white spaces from dictionary keys and values
+    def remove_spaces(obj):
+        if isinstance(obj, dict):
+            return {key.strip(): remove_spaces(val) if isinstance(val, (dict, list)) else val.strip() for key, val in obj.items()}
+        elif isinstance(obj, list):
+            return [remove_spaces(item) for item in obj]
+        elif isinstance(obj, str):
+            return obj.strip()
+        else:
+            return obj
+
+    # Clean the data dictionary
+    cleaned_data = remove_spaces(data)
+
+    # Convert the cleaned dictionary back to JSON string
+    cleaned_json_string = json.dumps(cleaned_data, indent=4)
+
+    return cleaned_json_string
 
 #save openai content response 
 def save_openai_response(content,caseid,filename):
@@ -175,8 +199,9 @@ def sbcontentanalysisservice(azservicebus: func.ServiceBusMessage):
     if openai_result_dict['status']=="success":
         openai_content = openai_result_dict['response']
         logging.info(f"openai_content: {openai_content}")
-        save_openai_response(openai_content,caseid,filename)
-        clinicData = json.loads(openai_content)
+        openai_content_cleaned = clean_json(openai_content)
+        save_openai_response(openai_content_cleaned,caseid,filename)
+        clinicData = json.loads(openai_content_cleaned)
         # Extract unique ClinicalArea values
         clinical_areas = set(diagnosis["ClinicalArea"] for diagnosis in clinicData["Diagnoses"])
         # Concatenate unique ClinicalArea values into a single string
