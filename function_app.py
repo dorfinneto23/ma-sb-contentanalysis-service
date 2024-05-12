@@ -176,6 +176,13 @@ def sbcontentanalysisservice(azservicebus: func.ServiceBusMessage):
         openai_content = openai_result_dict['response']
         logging.info(f"openai_content: {openai_content}")
         save_openai_response(openai_content,caseid,filename)
+        clinicData = json.loads(openai_content)
+        # Extract unique ClinicalArea values
+        clinical_areas = set(diagnosis["ClinicalArea"] for diagnosis in clinicData["Diagnoses"])
+        # Concatenate unique ClinicalArea values into a single string
+        clinical_areas_concatenated = ';'.join(clinical_areas)
+        logging.info(f"clinical_areas_concatenated: {clinical_areas_concatenated}")
+
     else: 
         logging.info(f"openai not content response - error, {openai_result}")
     
