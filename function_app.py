@@ -79,7 +79,9 @@ def clean_json(json_string):
 
         # Function to recursively remove white spaces from dictionary keys and values
         def remove_spaces(obj):
-            if isinstance(obj, dict):
+            if obj is None:
+                return json_string
+            elif isinstance(obj, dict):
                 return {key.strip(): remove_spaces(val) if isinstance(val, (dict, list)) else val.strip() for key, val in obj.items()}
             elif isinstance(obj, list):
                 return [remove_spaces(item) for item in obj]
