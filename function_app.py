@@ -29,6 +29,27 @@ password = os.environ.get('sql_password')
 driver= '{ODBC Driver 18 for SQL Server}'
 
 
+# Generic Function to update case  in the 'cases' table
+def update_case_generic(caseid,field,value):
+    try:
+        # Establish a connection to the Azure SQL database
+        conn = pyodbc.connect('DRIVER='+driver+';SERVER='+server+';DATABASE='+database+';UID='+username+';PWD='+ password)
+        cursor = conn.cursor()
+
+        # Insert new case data into the 'cases' table
+        cursor.execute(f"UPDATE cases SET {field} = ? WHERE id = ?", (value, caseid))
+        conn.commit()
+
+        # Close connections
+        cursor.close()
+        conn.close()
+        
+        logging.info(f"case {caseid} updated field name: {field} , value: {value}")
+        return True
+    except Exception as e:
+        logging.error(f"Error update case: {str(e)}")
+        return False    
+
 # Generic Function to update documents  in the 'documents' table
 def update_documents_generic(doc_id,field,value,field2,value2):
     try:
@@ -195,6 +216,8 @@ def sbcontentanalysisservice(azservicebus: func.ServiceBusMessage):
     caseid = message_data_dict['caseid']
     doc_id = message_data_dict['doc_id']
     path = message_data_dict['path']
+    pagenumber = message_data_dict['pagenumber']
+    totalpages = message_data_dict['totalpages']
     url = message_data_dict['url']
     filename = message_data_dict['filename']
     openai_result = openai_content_analysis(path,caseid)
@@ -211,6 +234,11 @@ def sbcontentanalysisservice(azservicebus: func.ServiceBusMessage):
         clinical_areas_concatenated = ';'.join(clinical_areas)
         logging.info(f"clinical_areas_concatenated: {clinical_areas_concatenated}")
         update_documents_generic(doc_id,"contentanalysis",openai_content_cleaned,"clinicalAreas",clinical_areas_concatenated)
+        if pagenumber==totalpages: #check if the last file passed 
+            update_case_generic(caseid,"status",6) #update case status to 7 "content analysis done"
+            logging.info(f"content analysis process - done")
+        else:
+            logging.info(f"content analysis on {pagenumber} out of {totalpages} - done")
 
     else: 
         logging.info(f"openai not content response - error message, {openai_result}")
