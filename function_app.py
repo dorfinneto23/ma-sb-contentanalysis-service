@@ -50,21 +50,24 @@ def update_documents_generic(doc_id,field,value,field2,value2):
         logging.error(f"Error update case: {str(e)}")
         return False  
     
-# Clean Json string - clean spaces  
+# Clean Json string - clean spaces  if cant clean return the same value 
 def clean_json(json_string):
-    # Parse the JSON string into a Python dictionary
-    data = json.loads(json_string)
+    try:
+        # Parse the JSON string into a Python dictionary
+        data = json.loads(json_string)
 
-    # Function to recursively remove white spaces from dictionary keys and values
-    def remove_spaces(obj):
-        if isinstance(obj, dict):
-            return {key.strip(): remove_spaces(val) if isinstance(val, (dict, list)) else val.strip() for key, val in obj.items()}
-        elif isinstance(obj, list):
-            return [remove_spaces(item) for item in obj]
-        elif isinstance(obj, str):
-            return obj.strip()
-        else:
-            return obj
+        # Function to recursively remove white spaces from dictionary keys and values
+        def remove_spaces(obj):
+            if isinstance(obj, dict):
+                return {key.strip(): remove_spaces(val) if isinstance(val, (dict, list)) else val.strip() for key, val in obj.items()}
+            elif isinstance(obj, list):
+                return [remove_spaces(item) for item in obj]
+            elif isinstance(obj, str):
+                return obj.strip()
+            else:
+                return obj
+    except Exception as e:
+        return json_string
 
     # Clean the data dictionary
     cleaned_data = remove_spaces(data)
