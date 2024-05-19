@@ -59,12 +59,17 @@ def json_to_csv(json_data):
         
         # Iterate through each diagnosis
         for diagnosis in json_data.get("Diagnoses", []):
+            treatment = diagnosis.get("Treatment", "")
+            # Handle treatment being either a list or a string
+            if isinstance(treatment, list):
+                treatment = "; ".join(treatment)
+            
             record = {
                 "FileNumber": file_number,
                 "Diagnosis": diagnosis.get("Diagnosis", ""),
                 "DateOfDiagnosis": diagnosis.get("DateOfDiagnosis", ""),
                 "LevelStageSeverity": diagnosis.get("LevelStageSeverity", ""),
-                "Treatment": "; ".join(diagnosis["Treatment"]) if isinstance(diagnosis.get("Treatment", ""), list) else diagnosis.get("Treatment", ""),
+                "Treatment": treatment,
                 "ClinicalArea": diagnosis.get("ClinicalArea", "")
             }
             records.append(record)
