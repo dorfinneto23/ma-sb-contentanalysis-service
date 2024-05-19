@@ -90,27 +90,6 @@ def update_case_generic(caseid,field,value):
         logging.error(f"Error update case: {str(e)}")
         return False    
 
-# Generic Function to update documents  in the 'documents' table
-def update_documents_generic(doc_id,field,value,field2,value2):
-    try:
-        # Establish a connection to the Azure SQL database
-        conn = pyodbc.connect('DRIVER='+driver+';SERVER='+server+';DATABASE='+database+';UID='+username+';PWD='+ password)
-        cursor = conn.cursor()
-
-        # Insert new case data into the 'cases' table
-        cursor.execute(f"UPDATE documents SET {field} = ?,{field2} = ? WHERE id = ?", (value, value2, doc_id))
-        conn.commit()
-
-        # Close connections
-        cursor.close()
-        conn.close()
-        
-        logging.info(f"document id:  {doc_id} updated field name: {field} , value: {value}")
-        return True
-    except Exception as e:
-        logging.error(f"Error update case: {str(e)}")
-        return False  
-    
 # Clean Json string - clean spaces  if cant clean return the same value 
 def clean_json(json_string):
     try:
@@ -275,7 +254,6 @@ def sbcontentanalysisservice(azservicebus: func.ServiceBusMessage):
         # Concatenate unique ClinicalArea values into a single string
         clinical_areas_concatenated = ';'.join(clinical_areas)
         logging.info(f"clinical_areas_concatenated: {clinical_areas_concatenated}")
-        #update_documents_generic(doc_id,"contentAnalysisJson",openai_content_cleaned,"clinicAreas",clinical_areas_concatenated)
         update_documents_entity_field("documents", caseid, doc_id, "contentAnalysisJson", openai_content_cleaned,"clinicAreas",clinical_areas_concatenated,"status",4)
         if pagenumber==totalpages: #check if the last file passed 
             update_case_generic(caseid,"status",6) #update case status to 7 "content analysis done"
