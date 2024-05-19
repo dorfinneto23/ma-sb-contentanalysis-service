@@ -9,6 +9,7 @@ from azure.servicebus import ServiceBusClient, ServiceBusMessage # in order to u
 from openai import AzureOpenAI #for using openai services 
 from azure.data.tables import TableServiceClient, TableClient, UpdateMode # in order to use azure storage table  
 from azure.core.exceptions import ResourceExistsError, ResourceNotFoundError # in order to use azure storage table  exceptions 
+import pandas as pd #helping convert json to csv
 
 #Azure Blob Storage connection string
 connection_string_blob = os.environ.get('BlobStorageConnString')
@@ -31,8 +32,47 @@ password = os.environ.get('sql_password')
 driver= '{ODBC Driver 18 for SQL Server}'
 
 
+#conver json to csv 
+def json_to_csv(json_data):
+    """
+    Converts JSON data to a CSV format string.
+
+    Parameters:
+    json_data (str or dict): JSON data in string format or as a dictionary.
+
+    Returns:
+    str: CSV formatted string.
+
+    Raises:
+    ValueError: If the input data is not valid JSON or if the conversion fails.
+    """
+    try:
+        # If json_data is a string, parse it to a dictionary
+        if isinstance(json_data, str):
+            json_data = json.loads(json_data)
+        
+        # Create a DataFrame from the JSON data
+        df = pd.DataFrame(json_data)
+        
+        # Create a StringIO buffer
+        csv_buffer = io.StringIO()
+        
+        # Write the DataFrame to the buffer as CSV
+        df.to_csv(csv_buffer, index=False)
+        
+        # Retrieve the CSV string from the buffer
+        csv_string = csv_buffer.getvalue()
+        
+        return csv_string
+    
+    except json.JSONDecodeError as e:
+        raise ValueError("Invalid JSON data provided.") from e
+    except Exception as e:
+        raise ValueError("Failed to convert JSON to CSV.") from e
+
+
 # Update field on specific entity/ row in storage table 
-def update_documents_entity_field(table_name, partition_key, row_key, field_name, new_value,field_name2,new_value2,field_name3,new_value3):
+def update_documents_entity_field(table_name, partition_key, row_key, field_name, new_value,field_name2,new_value2,field_name3,new_value3,field_name4,new_value4):
     """
     Updates a specific field of an entity in an Azure Storage Table.
 
@@ -59,6 +99,7 @@ def update_documents_entity_field(table_name, partition_key, row_key, field_name
         entity[field_name] = new_value
         entity[field_name2] = new_value2
         entity[field_name3] = new_value3
+        entity[field_name4] = new_value4
 
         # Update the entity in the table
         table_client.update_entity(entity, mode=UpdateMode.REPLACE)
@@ -254,7 +295,8 @@ def sbcontentanalysisservice(azservicebus: func.ServiceBusMessage):
         # Concatenate unique ClinicalArea values into a single string
         clinical_areas_concatenated = ';'.join(clinical_areas)
         logging.info(f"clinical_areas_concatenated: {clinical_areas_concatenated}")
-        update_documents_entity_field("documents", caseid, doc_id, "contentAnalysisJson", openai_content_cleaned,"clinicAreas",clinical_areas_concatenated,"status",4)
+        content_csv = json_to_csv(openai_content_cleaned)
+        update_documents_entity_field("documents", caseid, doc_id, "contentAnalysisJson", openai_content_cleaned,"clinicAreas",clinical_areas_concatenated,"status",4,"contentAnalysisCsv",content_csv)
         if pagenumber==totalpages: #check if the last file passed 
             update_case_generic(caseid,"status",6) #update case status to 7 "content analysis done"
             logging.info(f"content analysis process - done")
