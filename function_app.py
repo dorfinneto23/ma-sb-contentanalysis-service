@@ -51,8 +51,26 @@ def json_to_csv(json_data):
         if isinstance(json_data, str):
             json_data = json.loads(json_data)
         
-        # Create a DataFrame from the JSON data
-        df = pd.DataFrame(json_data)
+        # Extract FileNumber
+        file_number = json_data.get("FileNumber", "")
+        
+        # Prepare list to collect all diagnosis records
+        records = []
+        
+        # Iterate through each diagnosis
+        for diagnosis in json_data.get("Diagnoses", []):
+            record = {
+                "FileNumber": file_number,
+                "Diagnosis": diagnosis.get("Diagnosis", ""),
+                "DateOfDiagnosis": diagnosis.get("DateOfDiagnosis", ""),
+                "LevelStageSeverity": diagnosis.get("LevelStageSeverity", ""),
+                "Treatment": "; ".join(diagnosis.get("Treatment", [])),
+                "ClinicalArea": diagnosis.get("ClinicalArea", "")
+            }
+            records.append(record)
+        
+        # Create a DataFrame from the records
+        df = pd.DataFrame(records)
         
         # Create a StringIO buffer
         csv_buffer = io.StringIO()
