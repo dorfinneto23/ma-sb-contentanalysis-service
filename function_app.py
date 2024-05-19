@@ -64,7 +64,7 @@ def json_to_csv(json_data):
                 "Diagnosis": diagnosis.get("Diagnosis", ""),
                 "DateOfDiagnosis": diagnosis.get("DateOfDiagnosis", ""),
                 "LevelStageSeverity": diagnosis.get("LevelStageSeverity", ""),
-                "Treatment": "; ".join(diagnosis.get("Treatment", [])),
+                "Treatment": "; ".join(diagnosis["Treatment"]) if isinstance(diagnosis.get("Treatment", ""), list) else diagnosis.get("Treatment", ""),
                 "ClinicalArea": diagnosis.get("ClinicalArea", "")
             }
             records.append(record)
