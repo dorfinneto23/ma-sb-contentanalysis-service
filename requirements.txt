@@ -9,3 +9,4 @@ azure.servicebus
 openai
 azure.data.tables
 pandas
+csv

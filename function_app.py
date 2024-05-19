@@ -10,6 +10,7 @@ from openai import AzureOpenAI #for using openai services
 from azure.data.tables import TableServiceClient, TableClient, UpdateMode # in order to use azure storage table  
 from azure.core.exceptions import ResourceExistsError, ResourceNotFoundError # in order to use azure storage table  exceptions 
 import pandas as pd #helping convert json to csv
+import csv #helping convert json to csv
 
 #Azure Blob Storage connection string
 connection_string_blob = os.environ.get('BlobStorageConnString')
@@ -33,66 +34,42 @@ driver= '{ODBC Driver 18 for SQL Server}'
 
 
 #conver json to csv 
-def json_to_csv(json_data):
-    """
-    Converts JSON data to a CSV format string.
-
-    Parameters:
-    json_data (str or dict): JSON data in string format or as a dictionary.
-
-    Returns:
-    str: CSV formatted string.
-
-    Raises:
-    ValueError: If the input data is not valid JSON or if the conversion fails.
-    """
-    try:
-        # If json_data is a string, parse it to a dictionary
-        if isinstance(json_data, str):
-            json_data = json.loads(json_data)
-        
-        # Extract FileNumber
-        file_number = json_data.get("FileNumber", "")
-        
-        # Prepare list to collect all diagnosis records
-        records = []
-        
-        # Iterate through each diagnosis
-        for diagnosis in json_data.get("Diagnoses", []):
-            treatment = diagnosis.get("Treatment", "")
-            # Handle treatment being either a list or a string
-            if isinstance(treatment, list):
-                treatment = "; ".join(treatment)
-            
-            record = {
-                "FileNumber": file_number,
-                "Diagnosis": diagnosis.get("Diagnosis", ""),
-                "DateOfDiagnosis": diagnosis.get("DateOfDiagnosis", ""),
-                "LevelStageSeverity": diagnosis.get("LevelStageSeverity", ""),
-                "Treatment": treatment,
-                "ClinicalArea": diagnosis.get("ClinicalArea", "")
-            }
-            records.append(record)
-        
-        # Create a DataFrame from the records
-        df = pd.DataFrame(records)
-        
-        # Create a StringIO buffer
-        csv_buffer = io.StringIO()
-        
-        # Write the DataFrame to the buffer as CSV
-        df.to_csv(csv_buffer, index=False)
-        
-        # Retrieve the CSV string from the buffer
-        csv_string = csv_buffer.getvalue()
-        
-        return csv_string
+def json_to_csv(json_string):
+   # Parse the JSON string into a Python dictionary
+    data = json.loads(json_string)
     
-    except json.JSONDecodeError as e:
-        raise ValueError("Invalid JSON data provided.") from e
-    except Exception as e:
-        raise ValueError("Failed to convert JSON to CSV.") from e
-
+    # Create an in-memory string buffer
+    output = io.StringIO()
+    
+    # Create a CSV writer object using the string buffer
+    writer = csv.writer(output)
+    
+    # Write the header row
+    header = ["FileNumber", "Diagnosis", "DateOfDiagnosis", "LevelStageSeverity", "Treatment", "ClinicalArea"]
+    writer.writerow(header)
+    
+    # Extract the file number
+    file_number = data.get("FileNumber")
+    
+    # Iterate through the diagnoses and write each as a row in the CSV
+    for diagnosis in data.get("Diagnoses", []):
+        row = [
+            file_number,
+            diagnosis.get("Diagnosis", "Not Specified"),
+            diagnosis.get("DateOfDiagnosis", "Not Specified"),
+            diagnosis.get("LevelStageSeverity", "Not Specified"),
+            diagnosis.get("Treatment", "Not Specified"),
+            diagnosis.get("ClinicalArea", "Not Specified")
+        ]
+        writer.writerow(row)
+    
+    # Get the CSV content as a string
+    csv_string = output.getvalue()
+    
+    # Close the StringIO object
+    output.close()
+    
+    return csv_string
 
 # Update field on specific entity/ row in storage table 
 def update_documents_entity_field(table_name, partition_key, row_key, field_name, new_value,field_name2,new_value2,field_name3,new_value3,field_name4,new_value4):
