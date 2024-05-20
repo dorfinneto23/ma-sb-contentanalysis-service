@@ -49,17 +49,17 @@ def json_to_csv(json_string):
     writer.writerow(header)
     
     # Extract the file number
-    file_number = data.get("FileNumber").lower()
+    file_number = data.get("FileNumber")
     
     # Iterate through the diagnoses and write each as a row in the CSV and ensure small letters 
     for diagnosis in data.get("Diagnoses", []):
         row = [
             file_number,
-            diagnosis.get("Diagnosis", "Not Specified").lower(),
-            diagnosis.get("DateOfDiagnosis", "Not Specified").lower(),
-            diagnosis.get("LevelStageSeverity", "Not Specified").lower(),
-            diagnosis.get("Treatment", "Not Specified").lower(),
-            diagnosis.get("ClinicalArea", "Not Specified").lower()
+            diagnosis.get("Diagnosis", "Not Specified"),
+            diagnosis.get("DateOfDiagnosis", "Not Specified"),
+            diagnosis.get("LevelStageSeverity", "Not Specified"),
+            diagnosis.get("Treatment", "Not Specified"),
+            diagnosis.get("ClinicalArea", "Not Specified")
         ]
         writer.writerow(row)
     
@@ -252,7 +252,7 @@ def openai_content_analysis(path, caseid):
         #preparing data for response 
         data = { 
             "status" : "success", 
-            "response" : response.choices[0].message.content,
+            "response" : response.choices[0].message.content.lower(),
             "Description" : f"content analysis sucess"
         } 
         json_data = json.dumps(data)
