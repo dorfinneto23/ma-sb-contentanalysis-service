@@ -51,7 +51,7 @@ def json_to_csv(json_string):
     # Extract the file number
     file_number = data.get("FileNumber").lower()
     
-    # Iterate through the diagnoses and write each as a row in the CSV
+    # Iterate through the diagnoses and write each as a row in the CSV and ensure small letters 
     for diagnosis in data.get("Diagnoses", []):
         row = [
             file_number,
