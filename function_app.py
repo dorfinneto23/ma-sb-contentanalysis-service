@@ -9,7 +9,7 @@ from azure.servicebus import ServiceBusClient, ServiceBusMessage # in order to u
 from openai import AzureOpenAI #for using openai services 
 from azure.data.tables import TableServiceClient, TableClient, UpdateMode # in order to use azure storage table  
 from azure.core.exceptions import ResourceExistsError, ResourceNotFoundError # in order to use azure storage table  exceptions 
-import pandas as pd #helping convert json to csv
+import pandas as pd #helping convert json to csv - not relevant - need to ensure before this row deletion 
 import csv #helping convert json to csv
 
 #Azure Blob Storage connection string
@@ -299,7 +299,7 @@ def sbcontentanalysisservice(azservicebus: func.ServiceBusMessage):
         # Encode the CSV string to preserve newlines
         encoded_content_csv = content_csv.replace('\n', '\\n')
         # Decode the CSV string
-        #retrieved_csv = encoded_content_csv.replace('\\n', '\n')
+        #retrieved_csv = encoded_content_csv.replace('\\n', '\n') -- for testing retrieving csv
         update_documents_entity_field("documents", caseid, doc_id, "contentAnalysisJson", openai_content_cleaned,"clinicAreas",clinical_areas_concatenated,"status",4,"contentAnalysisCsv",encoded_content_csv)
         if pagenumber==totalpages: #check if the last file passed 
             update_case_generic(caseid,"status",6) #update case status to 7 "content analysis done"
