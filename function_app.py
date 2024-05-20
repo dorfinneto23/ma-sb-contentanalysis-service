@@ -49,17 +49,17 @@ def json_to_csv(json_string):
     writer.writerow(header)
     
     # Extract the file number
-    file_number = data.get("FileNumber")
+    file_number = data.get("filenumber")
     
     # Iterate through the diagnoses and write each as a row in the CSV and ensure small letters 
-    for diagnosis in data.get("Diagnoses", []):
+    for diagnosis in data.get("diagnosis", []):
         row = [
             file_number,
-            diagnosis.get("Diagnosis", "Not Specified"),
-            diagnosis.get("DateOfDiagnosis", "Not Specified"),
-            diagnosis.get("LevelStageSeverity", "Not Specified"),
-            diagnosis.get("Treatment", "Not Specified"),
-            diagnosis.get("ClinicalArea", "Not Specified")
+            diagnosis.get("diagnosis", "Not Specified"),
+            diagnosis.get("dateofdiagnosis", "Not Specified"),
+            diagnosis.get("levelstageseverity", "Not Specified"),
+            diagnosis.get("treatment", "Not Specified"),
+            diagnosis.get("clinicalarea", "Not Specified")
         ]
         writer.writerow(row)
     
@@ -291,7 +291,7 @@ def sbcontentanalysisservice(azservicebus: func.ServiceBusMessage):
         save_openai_response(openai_content_cleaned,caseid,filename)
         clinicData = json.loads(openai_content_cleaned)
         # Extract unique ClinicalArea values
-        clinical_areas = set(diagnosis["ClinicalArea"] for diagnosis in clinicData["Diagnoses"])
+        clinical_areas = set(diagnosis["clinicalarea"] for diagnosis in clinicData["diagnoses"])
         # Concatenate unique ClinicalArea values into a single string
         clinical_areas_concatenated = ';'.join(clinical_areas)
         logging.info(f"clinical_areas_concatenated: {clinical_areas_concatenated}")
