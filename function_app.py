@@ -296,7 +296,9 @@ def sbcontentanalysisservice(azservicebus: func.ServiceBusMessage):
         clinical_areas_concatenated = ';'.join(clinical_areas)
         logging.info(f"clinical_areas_concatenated: {clinical_areas_concatenated}")
         content_csv = json_to_csv(openai_content_cleaned)
-        update_documents_entity_field("documents", caseid, doc_id, "contentAnalysisJson", openai_content_cleaned,"clinicAreas",clinical_areas_concatenated,"status",4,"contentAnalysisCsv",content_csv)
+        # Encode the CSV string to preserve newlines
+        encoded_content_csv = content_csv.replace('\n', '\\n')
+        update_documents_entity_field("documents", caseid, doc_id, "contentAnalysisJson", openai_content_cleaned,"clinicAreas",clinical_areas_concatenated,"status",4,"contentAnalysisCsv",encoded_content_csv)
         if pagenumber==totalpages: #check if the last file passed 
             update_case_generic(caseid,"status",6) #update case status to 7 "content analysis done"
             logging.info(f"content analysis process - done")
