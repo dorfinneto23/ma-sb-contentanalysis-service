@@ -49,17 +49,17 @@ def json_to_csv(json_string):
     writer.writerow(header)
     
     # Extract the file number
-    file_number = data.get("FileNumber")
+    file_number = data.get("FileNumber").lower()
     
     # Iterate through the diagnoses and write each as a row in the CSV
     for diagnosis in data.get("Diagnoses", []):
         row = [
             file_number,
-            diagnosis.get("Diagnosis", "Not Specified"),
-            diagnosis.get("DateOfDiagnosis", "Not Specified"),
-            diagnosis.get("LevelStageSeverity", "Not Specified"),
-            diagnosis.get("Treatment", "Not Specified"),
-            diagnosis.get("ClinicalArea", "Not Specified")
+            diagnosis.get("Diagnosis", "Not Specified").lower(),
+            diagnosis.get("DateOfDiagnosis", "Not Specified").lower(),
+            diagnosis.get("LevelStageSeverity", "Not Specified").lower(),
+            diagnosis.get("Treatment", "Not Specified").lower(),
+            diagnosis.get("ClinicalArea", "Not Specified").lower()
         ]
         writer.writerow(row)
     
@@ -298,6 +298,8 @@ def sbcontentanalysisservice(azservicebus: func.ServiceBusMessage):
         content_csv = json_to_csv(openai_content_cleaned)
         # Encode the CSV string to preserve newlines
         encoded_content_csv = content_csv.replace('\n', '\\n')
+        # Decode the CSV string
+        #retrieved_csv = encoded_content_csv.replace('\\n', '\n')
         update_documents_entity_field("documents", caseid, doc_id, "contentAnalysisJson", openai_content_cleaned,"clinicAreas",clinical_areas_concatenated,"status",4,"contentAnalysisCsv",encoded_content_csv)
         if pagenumber==totalpages: #check if the last file passed 
             update_case_generic(caseid,"status",6) #update case status to 7 "content analysis done"
