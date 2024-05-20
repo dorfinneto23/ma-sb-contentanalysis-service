@@ -52,7 +52,7 @@ def json_to_csv(json_string):
     file_number = data.get("filenumber")
     
     # Iterate through the diagnoses and write each as a row in the CSV and ensure small letters 
-    for diagnosis in data.get("diagnosis", []):
+    for diagnosis in data.get("diagnoses", []):
         row = [
             file_number,
             diagnosis.get("diagnosis", "Not Specified"),
