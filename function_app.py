@@ -45,7 +45,7 @@ def json_to_csv(json_string):
     writer = csv.writer(output)
     
     # Write the header row
-    header = ["FileNumber", "Diagnosis", "DateOfDiagnosis", "LevelStageSeverity", "Treatment", "ClinicalArea"]
+    header = ["filenumber", "diagnosis", "dateofdiagnosis", "levelstageseverity", "treatment", "clinicalarea"]
     writer.writerow(header)
     
     # Extract the file number
