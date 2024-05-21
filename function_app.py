@@ -9,7 +9,6 @@ from azure.servicebus import ServiceBusClient, ServiceBusMessage # in order to u
 from openai import AzureOpenAI #for using openai services 
 from azure.data.tables import TableServiceClient, TableClient, UpdateMode # in order to use azure storage table  
 from azure.core.exceptions import ResourceExistsError, ResourceNotFoundError # in order to use azure storage table  exceptions 
-import pandas as pd #helping convert json to csv - not relevant - need to ensure before this row deletion 
 import csv #helping convert json to csv
 
 #Azure Blob Storage connection string
