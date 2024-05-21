@@ -33,6 +33,27 @@ password = os.environ.get('sql_password')
 driver= '{ODBC Driver 18 for SQL Server}'
 
 
+ #Create event on azure service bus 
+def create_servicebus_event(queue_name, event_data):
+    try:
+        # Create a ServiceBusClient using the connection string
+        servicebus_client = ServiceBusClient.from_connection_string(connection_string_servicebus)
+
+        # Create a sender for the queue
+        sender = servicebus_client.get_queue_sender(queue_name)
+
+        with sender:
+            # Create a ServiceBusMessage object with the event data
+            message = ServiceBusMessage(event_data)
+
+            # Send the message to the queue
+            sender.send_messages(message)
+
+        print("Event created successfully.")
+    
+    except Exception as e:
+        print("An error occurred:", str(e))
+
 #conver json to csv 
 def json_to_csv(json_string):
    # Parse the JSON string into a Python dictionary
@@ -301,6 +322,16 @@ def sbcontentanalysisservice(azservicebus: func.ServiceBusMessage):
         # Decode the CSV string
         #retrieved_csv = encoded_content_csv.replace('\\n', '\n') -- for testing retrieving csv
         update_documents_entity_field("documents", caseid, doc_id, "contentAnalysisJson", openai_content_cleaned,"clinicAreas",clinical_areas_concatenated,"status",4,"contentAnalysisCsv",encoded_content_csv)
+        #preparing data for service bus
+        data = { 
+                "doc_id" : doc_id, 
+                "storageTable" :"documents",
+                "caseid" :caseid,
+                "pagenumber" :pagenumber,
+                "totalpages" :totalpages
+            } 
+        json_data = json.dumps(data)
+        create_servicebus_event("clinicareasconsolidation",json_data)
         if pagenumber==totalpages: #check if the last file passed 
             update_case_generic(caseid,"status",6) #update case status to 7 "content analysis done"
             logging.info(f"content analysis process - done")
