@@ -32,6 +32,28 @@ password = os.environ.get('sql_password')
 driver= '{ODBC Driver 18 for SQL Server}'
 
 
+
+#  Function check how many rows in partition of azure storage table
+def count_rows_in_partition( table_name,partition_key):
+    # Create a TableServiceClient object using the connection string
+    service_client = TableServiceClient.from_connection_string(conn_str=connection_string_blob)
+    
+    # Get the table client
+    table_client = service_client.get_table_client(table_name=table_name)
+    
+    # Define the filter query to count entities with the specified partition key and where contentAnalysisCsv is not null or empty
+    filter_query = f"PartitionKey eq '{partition_key}' and contentAnalysisCsv ne ''"
+    
+    # Query the entities and count the number of entities
+    entities = table_client.query_entities(query_filter=filter_query)
+    count = sum(1 for _ in entities)  # Sum up the entities
+    
+    if count>0:
+        return count
+    else:
+        return 0
+
+
  #Create event on azure service bus 
 def create_servicebus_event(queue_name, event_data):
     try:
@@ -332,7 +354,8 @@ def sbcontentanalysisservice(azservicebus: func.ServiceBusMessage):
         json_data = json.dumps(data)
         create_servicebus_event("clinicareasconsolidation",json_data)
         logging.info(f"service bus event sent")
-        if pagenumber==totalpages: #check if the last file passed 
+        pages_done = count_rows_in_partition("documents",caseid) # check how many pages proccess done 
+        if pages_done==totalpages: #check if the last file passed 
             update_case_generic(caseid,"status",7) #update case status to 7 "content analysis done"
             logging.info(f"content analysis process - done")
         else:
