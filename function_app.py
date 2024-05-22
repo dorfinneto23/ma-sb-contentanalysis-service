@@ -333,7 +333,7 @@ def sbcontentanalysisservice(azservicebus: func.ServiceBusMessage):
         create_servicebus_event("clinicareasconsolidation",json_data)
         logging.info(f"service bus event sent")
         if pagenumber==totalpages: #check if the last file passed 
-            update_case_generic(caseid,"status",6) #update case status to 7 "content analysis done"
+            update_case_generic(caseid,"status",7) #update case status to 7 "content analysis done"
             logging.info(f"content analysis process - done")
         else:
             logging.info(f"content analysis on {pagenumber} out of {totalpages} - done")
