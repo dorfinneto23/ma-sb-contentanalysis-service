@@ -160,7 +160,7 @@ def update_case_generic(caseid,field,value):
         cursor = conn.cursor()
 
         # Insert new case data into the 'cases' table
-        cursor.execute(f"UPDATE cases SET {field} = ? WHERE id = ?", (value, caseid))
+        cursor.execute(f"UPDATE cases SET {field} = ? WHERE id = ? and status <> 9", (value, caseid))
         conn.commit()
 
         # Close connections
