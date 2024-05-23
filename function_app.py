@@ -153,14 +153,14 @@ def update_documents_entity_field(table_name, partition_key, row_key, field_name
         logging.info(f"An error occurred: {e}")
 
 # Generic Function to update case  in the 'cases' table
-def update_case_generic(caseid,field,value):
+def update_case_generic(caseid,field,value,field2,value2):
     try:
         # Establish a connection to the Azure SQL database
         conn = pyodbc.connect('DRIVER='+driver+';SERVER='+server+';DATABASE='+database+';UID='+username+';PWD='+ password)
         cursor = conn.cursor()
 
         # Insert new case data into the 'cases' table
-        cursor.execute(f"UPDATE cases SET {field} = ? WHERE id = ? and status <> 9", (value, caseid))
+        cursor.execute(f"UPDATE cases SET {field} = ? ,{field2} = ?  WHERE id = ? and status <> 9", (value,value2, caseid))
         conn.commit()
 
         # Close connections
@@ -356,7 +356,7 @@ def sbcontentanalysisservice(azservicebus: func.ServiceBusMessage):
         logging.info(f"service bus event sent")
         pages_done = count_rows_in_partition("documents",caseid) # check how many pages proccess done 
         if pages_done==totalpages: #check if the last file passed 
-            update_case_generic(caseid,"status",7) #update case status to 7 "content analysis done"
+            update_case_generic(caseid,"status",7,"contentAnalysis",1) #update case status to 7 "content analysis done"
             logging.info(f"content analysis process - done")
         else:
             logging.info(f"content analysis on {pagenumber} out of {totalpages} - done")
