@@ -184,23 +184,25 @@ def clean_json(json_string):
             if obj is None:
                 return None
             elif isinstance(obj, dict):
-                return {key.strip(): remove_spaces(val) if isinstance(val, (dict, list)) else val.strip() for key, val in obj.items()}
+                return {key.strip() if isinstance(key, str) else key: remove_spaces(val) if isinstance(val, (dict, list, str)) else val for key, val in obj.items()}
             elif isinstance(obj, list):
                 return [remove_spaces(item) for item in obj]
             elif isinstance(obj, str):
                 return obj.strip()
             else:
                 return obj
+
+        # Clean the data dictionary
+        cleaned_data = remove_spaces(data)
+        if cleaned_data is None:
+            return json_string
+
+        # Convert the cleaned dictionary back to JSON string
+        cleaned_json_string = json.dumps(cleaned_data, indent=4)
+        return cleaned_json_string
+
     except Exception as e:
         return json_string
-
-    # Clean the data dictionary
-    cleaned_data = remove_spaces(data)
-    if cleaned_data is None:
-        return json_string
-    # Convert the cleaned dictionary back to JSON string
-    cleaned_json_string = json.dumps(cleaned_data, indent=4)
-    return cleaned_json_string
 
 #save openai content response 
 def save_openai_response(content,caseid,filename):
