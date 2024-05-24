@@ -182,7 +182,7 @@ def clean_json(json_string):
         # Function to recursively remove white spaces from dictionary keys and values
         def remove_spaces(obj):
             if obj is None:
-                return json_string
+                return None
             elif isinstance(obj, dict):
                 return {key.strip(): remove_spaces(val) if isinstance(val, (dict, list)) else val.strip() for key, val in obj.items()}
             elif isinstance(obj, list):
@@ -196,10 +196,10 @@ def clean_json(json_string):
 
     # Clean the data dictionary
     cleaned_data = remove_spaces(data)
-
+    if cleaned_data is None:
+        return json_string
     # Convert the cleaned dictionary back to JSON string
     cleaned_json_string = json.dumps(cleaned_data, indent=4)
-
     return cleaned_json_string
 
 #save openai content response 
