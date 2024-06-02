@@ -35,6 +35,7 @@ driver= '{ODBC Driver 18 for SQL Server}'
 #get valid clinic areas from assistants table on azure storage 
 def get_filtered_partition_keys_from_azure_table(table_name, row_key, approved_value):
     try:
+        logging.info(f"get_filtered_partition_keys_from_azure_table:table_name:{table_name},row_key:{row_key},approved_value:{row_key}")
         # Create a TableServiceClient using the connection string
         table_service_client = TableServiceClient.from_connection_string(conn_str=connection_string_blob)
         
@@ -50,6 +51,7 @@ def get_filtered_partition_keys_from_azure_table(table_name, row_key, approved_v
         # Extract all unique PartitionKey values
         partition_keys = set()
         for entity in entities:
+            logging.info(f"get_filtered_partition_keys_from_azure_table:entity PartitionKey: {entity['PartitionKey']}")
             partition_keys.add(entity['PartitionKey'])
         
         return list(partition_keys)
