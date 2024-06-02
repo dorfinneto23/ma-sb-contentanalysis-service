@@ -120,7 +120,7 @@ def json_to_csv(json_string):
     file_number = data.get("filenumber")
     
     #get valid clinic areas from assistants table on azure storage 
-    clinicAreasList  = get_filtered_partition_keys_from_azure_table("assistants",1,1)
+    clinicAreasList  = get_filtered_partition_keys_from_azure_table("assistants","1","1")
     logging.info(f"clinicAreasList:{clinicAreasList}")
     # if not found clinic area , put "Not Specified"
     for diagnosis in data.get("diagnoses", []):
