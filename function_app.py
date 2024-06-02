@@ -24,12 +24,43 @@ client = AzureOpenAI(
   azure_endpoint = "https://openaisponsorship.openai.azure.com/"
 )
 
+openai_model = "proofitGPT4"
+
 # Define connection details
 server = 'medicalanalysis-sqlserver.database.windows.net'
 database = 'medicalanalysis'
 username = os.environ.get('sql_username')
 password = os.environ.get('sql_password')
 driver= '{ODBC Driver 18 for SQL Server}'
+
+
+
+# Update tokens and request number on openaiRequestsMng
+def update_openaiRequestsMng(table_name, partition_key, row_key, pageTokens):
+
+    try:
+        # Create a TableServiceClient using the connection string
+        table_service_client = TableServiceClient.from_connection_string(conn_str=connection_string_blob)
+
+        # Get a TableClient
+        table_client = table_service_client.get_table_client(table_name)
+
+        # Retrieve the entity
+        entity = table_client.get_entity(partition_key, row_key)
+
+        # Update the field
+        entity["currentlyTokens"] = entity["currentlyTokens"]  + pageTokens
+        entity["currentlyRequests"] = entity["currentlyRequests"]  + 1
+
+        # Update the entity in the table
+        table_client.update_entity(entity, mode=UpdateMode.REPLACE)
+        logging.info(f"update_openaiRequestsMng:Entity updated successfully.")
+
+    except ResourceNotFoundError:
+        logging.info(f"The entity with PartitionKey '{partition_key}' and RowKey '{row_key}' was not found.")
+    except Exception as e:
+        logging.info(f"An error occurred: {e}")
+
 
 
 #get valid clinic areas from assistants table on azure storage 
@@ -152,18 +183,7 @@ def json_to_csv(json_string):
 
 # Update field on specific entity/ row in storage table 
 def update_documents_entity_field(table_name, partition_key, row_key, field_name, new_value,field_name2,new_value2,field_name3,new_value3,field_name4,new_value4):
-    """
-    Updates a specific field of an entity in an Azure Storage Table.
 
-    Parameters:
-    - account_name: str, the name of the Azure Storage account
-    - account_key: str, the key for the Azure Storage account
-    - table_name: str, the name of the table
-    - partition_key: str, the PartitionKey of the entity
-    - row_key: str, the RowKey of the entity
-    - field_name: str, the name of the field to update
-    - new_value: the new value to set for the field
-    """
     try:
         # Create a TableServiceClient using the connection string
         table_service_client = TableServiceClient.from_connection_string(conn_str=connection_string_blob)
@@ -273,7 +293,7 @@ def openai_content_analysis(path, caseid):
         mission = f"The mission based on the uploaded file is as follows:\n{filecontent}\nPlease provide insights based on this information."
         #chat request for content analysis 
         response = client.chat.completions.create(
-                    model="proofitGPT4", # model = "deployment_name".
+                    model=openai_model,
                     response_format={ "type": "json_object" },
                     messages=[
                         {"role": "system", "content": mission},
@@ -361,8 +381,9 @@ def sbcontentanalysisservice(azservicebus: func.ServiceBusMessage):
     path = message_data_dict['path']
     pagenumber = message_data_dict['pagenumber']
     totalpages = message_data_dict['totalpages']
-    url = message_data_dict['url']
+    pageTokens = message_data_dict['tokens']
     filename = message_data_dict['filename']
+    update_openaiRequestsMng("openaiRequestsMng",openai_model,1,pageTokens)
     openai_result = openai_content_analysis(path,caseid)
     openai_result_dict = json.loads(openai_result) 
     if openai_result_dict['status']=="success":
