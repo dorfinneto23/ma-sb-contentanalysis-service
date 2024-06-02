@@ -125,11 +125,9 @@ def json_to_csv(json_string):
     # if not found clinic area , put "Not Specified"
     for diagnosis in data.get("diagnoses", []):
         clinical_area = diagnosis.get("clinicalarea", "Not Specified")
-        if clinical_area in clinicAreasList:
+        if clinical_area not in clinicAreasList:
             clinical_area = "Not Specified"
 
-    # Iterate through the diagnoses and write each as a row in the CSV and ensure small letters 
-    for diagnosis in data.get("diagnoses", []):
         row = [
             file_number,
             diagnosis.get("diagnosis", "Not Specified"),
