@@ -383,7 +383,7 @@ def sbcontentanalysisservice(azservicebus: func.ServiceBusMessage):
     totalpages = message_data_dict['totalpages']
     pageTokens = message_data_dict['pageTokens']
     filename = message_data_dict['filename']
-    update_openaiRequestsMng("openaiRequestsMng",openai_model,1,pageTokens)
+    update_openaiRequestsMng("openaiRequestsMng",openai_model,"1",pageTokens)
     openai_result = openai_content_analysis(path,caseid)
     openai_result_dict = json.loads(openai_result) 
     if openai_result_dict['status']=="success":
