@@ -57,7 +57,7 @@ def get_filtered_partition_keys_from_azure_table(table_name, row_key, approved_v
         return list(partition_keys)
     
     except Exception as e:
-        print(f"An error occurred: {e}")
+        logging.info(f"An error occurred: {e}")
         return []
 
 
