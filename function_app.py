@@ -43,11 +43,11 @@ def get_filtered_partition_keys_from_azure_table(table_name, row_key, approved_v
         table_client = table_service_client.get_table_client(table_name=table_name)
         
   
-        filter_query = f"RowKey eq '{row_key}' and approved eq {approved_value}"
+        filter_query = f"RowKey eq '{row_key}' and approved eq '{approved_value}'"
 
         # Query the table for entities matching the filter
         entities = table_client.query_entities(filter=filter_query)
-        # Extract the specified column values
+        logging.info(f"get_filtered_partition_keys_from_azure_table,entities:{entities}")
         # Extract all unique PartitionKey values
         partition_keys = set()
         for entity in entities:
