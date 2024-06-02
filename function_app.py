@@ -32,6 +32,32 @@ password = os.environ.get('sql_password')
 driver= '{ODBC Driver 18 for SQL Server}'
 
 
+#get valid clinic areas from assistants table on azure storage 
+def get_filtered_partition_keys_from_azure_table(table_name, row_key, approved_value):
+    try:
+        # Create a TableServiceClient using the connection string
+        table_service_client = TableServiceClient.from_connection_string(conn_str=connection_string_blob)
+        
+        # Get a reference to the table
+        table_client = table_service_client.get_table_client(table_name)
+        
+  
+        filter_query = f"RowKey eq '{row_key}' and approved eq {approved_value}"
+
+        # Query the table for entities matching the filter
+        entities = table_client.query_entities(filter=filter_query)
+        # Extract the specified column values
+        # Extract all unique PartitionKey values
+        partition_keys = set()
+        for entity in entities:
+            partition_keys.add(entity['PartitionKey'])
+        
+        return list(partition_keys)
+    
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return []
+
 
 #  Function check how many rows in partition of azure storage table
 def count_rows_in_partition( table_name,partition_key):
@@ -93,10 +119,13 @@ def json_to_csv(json_string):
     # Extract the file number
     file_number = data.get("filenumber")
     
+    #get valid clinic areas from assistants table on azure storage 
+    clinicAreasList  = get_filtered_partition_keys_from_azure_table("assistants",1,1)
+
     # if not found clinic area , put "Not Specified"
     for diagnosis in data.get("diagnoses", []):
         clinical_area = diagnosis.get("clinicalarea", "Not Specified")
-        if clinical_area == "" or clinical_area.lower() == "unknown":
+        if clinical_area in clinicAreasList:
             clinical_area = "Not Specified"
 
     # Iterate through the diagnoses and write each as a row in the CSV and ensure small letters 
