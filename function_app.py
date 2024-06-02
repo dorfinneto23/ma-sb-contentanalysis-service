@@ -40,7 +40,7 @@ def get_filtered_partition_keys_from_azure_table(table_name, row_key, approved_v
         table_service_client = TableServiceClient.from_connection_string(conn_str=connection_string_blob)
         
         # Get a reference to the table
-        table_client = table_service_client.get_table_client(table_name)
+        table_client = table_service_client.get_table_client(table_name=table_name)
         
   
         filter_query = f"RowKey eq '{row_key}' and approved eq {approved_value}"
