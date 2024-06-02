@@ -44,7 +44,7 @@ def get_filtered_partition_keys_from_azure_table(table_name, row_key, approved_v
         
   
         filter_query = f"RowKey eq '{row_key}' and approved eq '{approved_value}'"
-
+        logging.info(f"get_filtered_partition_keys_from_azure_table: filter_query:{filter_query}")
         # Query the table for entities matching the filter
         entities = table_client.query_entities(filter=filter_query)
         logging.info(f"get_filtered_partition_keys_from_azure_table,entities:{entities}")
