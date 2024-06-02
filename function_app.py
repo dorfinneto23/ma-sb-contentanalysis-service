@@ -107,7 +107,7 @@ def json_to_csv(json_string):
             diagnosis.get("dateofdiagnosis", "Not Specified"),
             diagnosis.get("levelstageseverity", "Not Specified"),
             diagnosis.get("treatment", "Not Specified"),
-            diagnosis.get("clinicalarea", "Not Specified")
+            clinical_area
         ]
         writer.writerow(row)
     
