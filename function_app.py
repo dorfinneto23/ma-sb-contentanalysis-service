@@ -49,8 +49,8 @@ def update_openaiRequestsMng(table_name, partition_key, row_key, pageTokens):
         entity = table_client.get_entity(partition_key, row_key)
 
         # Update the field
-        entity["currentlyTokens"] = entity["currentlyTokens"]  + pageTokens
-        entity["currentlyRequests"] = entity["currentlyRequests"]  + 1
+        entity["currentlyTokens"] +=  pageTokens
+        entity["currentlyRequests"] += 1
 
         # Update the entity in the table
         table_client.update_entity(entity, mode=UpdateMode.REPLACE)
