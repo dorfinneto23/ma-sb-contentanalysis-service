@@ -93,6 +93,12 @@ def json_to_csv(json_string):
     # Extract the file number
     file_number = data.get("filenumber")
     
+    # if not found clinic area , put "Not Specified"
+    for diagnosis in data.get("diagnoses", []):
+        clinical_area = diagnosis.get("clinicalarea", "Not Specified")
+        if clinical_area == "":
+            clinical_area = "Not Specified"
+
     # Iterate through the diagnoses and write each as a row in the CSV and ensure small letters 
     for diagnosis in data.get("diagnoses", []):
         row = [
