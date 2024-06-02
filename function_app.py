@@ -381,7 +381,7 @@ def sbcontentanalysisservice(azservicebus: func.ServiceBusMessage):
     path = message_data_dict['path']
     pagenumber = message_data_dict['pagenumber']
     totalpages = message_data_dict['totalpages']
-    pageTokens = message_data_dict['tokens']
+    pageTokens = message_data_dict['pageTokens']
     filename = message_data_dict['filename']
     update_openaiRequestsMng("openaiRequestsMng",openai_model,1,pageTokens)
     openai_result = openai_content_analysis(path,caseid)
