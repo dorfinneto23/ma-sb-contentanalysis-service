@@ -35,6 +35,34 @@ driver= '{ODBC Driver 18 for SQL Server}'
 
 
 
+# Reset tokens and requests usage 
+def reset_tokens_requests_usage(table_name, partition_key, row_key):
+
+    try:
+        logging.info(f"reset_tokens_requests_usage start :table_name:{table_name},partition_key:{partition_key}")
+        # Create a TableServiceClient using the connection string
+        table_service_client = TableServiceClient.from_connection_string(conn_str=connection_string_blob)
+
+        # Get a TableClient
+        table_client = table_service_client.get_table_client(table_name)
+
+        # Retrieve the entity
+        entity = table_client.get_entity(partition_key, row_key)
+
+        # Assign updated values back to the entity
+        entity["currentlyTokens"] = 0
+        entity["currentlyRequests"] = 0
+
+        # Update the entity in the table
+        table_client.update_entity(entity, mode=UpdateMode.REPLACE)
+        logging.info(f"reset_tokens_requests_usage:Entity updated successfully.")
+
+    except ResourceNotFoundError:
+        logging.info(f"The entity with PartitionKey '{partition_key}' and RowKey '{row_key}' was not found.")
+    except Exception as e:
+        logging.info(f"update_openaiRequestsMng :An error occurred: {e}")
+
+
 
 #check openai tokens and requtsts usage , if exceed limitation waiting one minute and reset values 
 def check_openai_available_resurces(table_name, partition_key, row_key,contentTokens):
@@ -59,9 +87,11 @@ def check_openai_available_resurces(table_name, partition_key, row_key,contentTo
         logging.info(f"get_openai_tokens_usage:currentlyTokens: {currentlyTokens},currentlyRequests: {currentlyRequests},requestsPerMinute: {requestsPerMinute},tokensPerMinute: {tokensPerMinute}")
         if (totalTokens>tokensPerMinute or totalTokens == tokensPerMinute):
             logging.info(f"waiting one minute - total tokens exceed the maximum limitation of openai,totalTokens:{totalTokens},maximum:{tokensPerMinute} ")
+            reset_tokens_requests_usage(table_name, partition_key, row_key)
             return True
         elif (totalRequests>requestsPerMinute or totalRequests == requestsPerMinute):
             logging.info(f"waiting one minute - total Requests  exceed the maximum limitation of openai,totalRequests:{totalRequests},maximum:{requestsPerMinute} ")
+            reset_tokens_requests_usage(table_name, partition_key, row_key)
             return True
         else:
             logging.info(f"The process can continue; no potential token limitation exceeded.")
