@@ -50,9 +50,9 @@ def update_openaiRequestsMng(table_name, partition_key, row_key, pageTokens):
         entity = table_client.get_entity(partition_key, row_key)
 
         # Extract values from EntityProperty and ensure they are integers
-        currently_tokens = int(entity["currentlyTokens"].value) if isinstance(entity["currentlyTokens"].value, (int, float, str)) else entity["currentlyTokens"].value
-        currently_requests = int(entity["currentlyRequests"].value) if isinstance(entity["currentlyRequests"].value, (int, float, str)) else entity["currentlyRequests"].value
-
+        currently_tokens = entity["currentlyTokens"]
+        currently_requests = entity["currentlyRequests"]
+        logging.info(f"update_openaiRequestsMng values from table:{table_name}:currently_tokens:{currently_tokens},currently_requests:{currently_requests}")
         # Update the fields
         currently_tokens += pageTokens
         currently_requests += 1
