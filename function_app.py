@@ -35,6 +35,43 @@ driver= '{ODBC Driver 18 for SQL Server}'
 
 
 
+
+#check openai tokens and requtsts usage , if exceed limitation waiting one minute and reset values 
+def check_openai_available_resurces(table_name, partition_key, row_key,contentTokens):
+    try:
+        logging.info(f"start running get_openai_tokens_usage")
+        # Create a TableServiceClient using the connection string
+        service_client = TableServiceClient.from_connection_string(conn_str=connection_string_blob)
+
+        # Get a TableClient for the specified table
+        table_client = service_client.get_table_client(table_name=table_name)
+
+        # Retrieve the entity using PartitionKey and RowKey
+        entity = table_client.get_entity(partition_key=partition_key, row_key=row_key)
+
+        # Return the values
+        currentlyTokens = entity.get('currentlyTokens')
+        currentlyRequests = entity.get('currentlyRequests')
+        requestsPerMinute = entity.get('requestsPerMinute')
+        tokensPerMinute = entity.get('tokensPerMinute')
+        totalTokens= currentlyTokens+contentTokens
+        totalRequests = currentlyRequests+1
+        logging.info(f"get_openai_tokens_usage:currentlyTokens: {currentlyTokens},currentlyRequests: {currentlyRequests},requestsPerMinute: {requestsPerMinute},tokensPerMinute: {tokensPerMinute}")
+        if (totalTokens>tokensPerMinute or totalTokens == tokensPerMinute):
+            logging.info(f"waiting one minute - total tokens exceed the maximum limitation of openai,totalTokens:{totalTokens},maximum:{tokensPerMinute} ")
+            return True
+        elif (totalRequests>requestsPerMinute or totalRequests == requestsPerMinute):
+            logging.info(f"waiting one minute - total Requests  exceed the maximum limitation of openai,totalRequests:{totalRequests},maximum:{requestsPerMinute} ")
+            return True
+        else:
+            logging.info(f"The process can continue; no potential token limitation exceeded.")
+            return True
+         
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return False
+
+
 # Update tokens and request number on openaiRequestsMng
 def update_openaiRequestsMng(table_name, partition_key, row_key, pageTokens):
 
@@ -392,6 +429,8 @@ def sbcontentanalysisservice(azservicebus: func.ServiceBusMessage):
     totalpages = message_data_dict['totalpages']
     pageTokens = int(message_data_dict['pageTokens'])
     filename = message_data_dict['filename']
+    availableResurces = check_openai_available_resurces("openaiRequestsMng", openai_model, "1",pageTokens)
+    logging.info(f"availableResurces: {availableResurces}")
     update_openaiRequestsMng("openaiRequestsMng",openai_model,"1",pageTokens)
     openai_result = openai_content_analysis(path,caseid)
     openai_result_dict = json.loads(openai_result) 
