@@ -39,6 +39,7 @@ driver= '{ODBC Driver 18 for SQL Server}'
 def update_openaiRequestsMng(table_name, partition_key, row_key, pageTokens):
 
     try:
+        logging.info(f"update_openaiRequestsMng start :table_name:{table_name},partition_key:{partition_key},pageTokens:{pageTokens}")
         # Create a TableServiceClient using the connection string
         table_service_client = TableServiceClient.from_connection_string(conn_str=connection_string_blob)
 
@@ -59,7 +60,7 @@ def update_openaiRequestsMng(table_name, partition_key, row_key, pageTokens):
     except ResourceNotFoundError:
         logging.info(f"The entity with PartitionKey '{partition_key}' and RowKey '{row_key}' was not found.")
     except Exception as e:
-        logging.info(f"An error occurred: {e}")
+        logging.info(f"update_openaiRequestsMng :An error occurred: {e}")
 
 
 
