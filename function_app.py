@@ -49,6 +49,12 @@ def update_openaiRequestsMng(table_name, partition_key, row_key, pageTokens):
         # Retrieve the entity
         entity = table_client.get_entity(partition_key, row_key)
 
+        # Ensure the fields are integers
+        if not isinstance(entity["currentlyTokens"], int):
+            entity["currentlyTokens"] = int(entity["currentlyTokens"])
+        if not isinstance(entity["currentlyRequests"], int):
+            entity["currentlyRequests"] = int(entity["currentlyRequests"])
+
         # Update the field
         entity["currentlyTokens"] +=  pageTokens
         entity["currentlyRequests"] += 1
