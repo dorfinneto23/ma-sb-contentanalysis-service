@@ -474,12 +474,13 @@ def sbcontentanalysisservice(azservicebus: func.ServiceBusMessage):
         logging.info(f"openai_content: {openai_content}")
         openai_content_cleaned = clean_json(openai_content)
         save_openai_response(openai_content_cleaned,caseid,filename)
-        clinicData = json.loads(openai_content_cleaned)
+        #clinicData = json.loads(openai_content_cleaned)
         # Extract unique ClinicalArea values
-        clinical_areas = set(diagnosis["clinicalarea"] for diagnosis in clinicData["diagnoses"])
+        #clinical_areas = set(diagnosis["clinicalarea"] for diagnosis in clinicData["diagnoses"])
         # Concatenate unique ClinicalArea values into a single string
-        clinical_areas_concatenated = ';'.join(clinical_areas)
-        logging.info(f"clinical_areas_concatenated: {clinical_areas_concatenated}")
+        #clinical_areas_concatenated = ';'.join(clinical_areas)
+        clinical_areas_concatenated="" #need to delete 
+        #logging.info(f"clinical_areas_concatenated: {clinical_areas_concatenated}")
         content_csv = json_to_csv(openai_content_cleaned)
         # Encode the CSV string to preserve newlines
         encoded_content_csv = content_csv.replace('\n', '\\n')
