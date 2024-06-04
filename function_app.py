@@ -25,7 +25,7 @@ client = AzureOpenAI(
   azure_endpoint = "https://openaisponsorship.openai.azure.com/"
 )
 
-openai_model = "proofitGPT4"
+openai_model = "ProofitGPT4o"
 
 # Define connection details
 server = 'medicalanalysis-sqlserver.database.windows.net'
