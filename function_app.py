@@ -216,7 +216,7 @@ def create_servicebus_event(queue_name, event_data):
         print("An error occurred:", str(e))
 
 #conver json to csv 
-def json_to_csv(json_string):
+def json_to_csv(json_string,pagenumber):
    # Parse the JSON string into a Python dictionary
     data = json.loads(json_string)
     
@@ -232,6 +232,7 @@ def json_to_csv(json_string):
     
     # Extract the file number
     file_number = data.get("filenumber")
+    page_number = pagenumber
     
     #get valid clinic areas from assistants table on azure storage 
     clinicAreasList  = get_filtered_partition_keys_from_azure_table("assistants","1","1")
@@ -250,7 +251,8 @@ def json_to_csv(json_string):
             diagnosis.get("dateofdiagnosis", "Not Specified"),
             diagnosis.get("levelstageseverity", "Not Specified"),
             diagnosis.get("treatment", "Not Specified"),
-            clinical_area
+            clinical_area,
+            page_number
         ]
         writer.writerow(row)
     
@@ -481,7 +483,7 @@ def sbcontentanalysisservice(azservicebus: func.ServiceBusMessage):
         #clinical_areas_concatenated = ';'.join(clinical_areas)
         clinical_areas_concatenated="" #need to delete 
         #logging.info(f"clinical_areas_concatenated: {clinical_areas_concatenated}")
-        content_csv = json_to_csv(openai_content_cleaned)
+        content_csv = json_to_csv(openai_content_cleaned,pagenumber)
         # Encode the CSV string to preserve newlines
         encoded_content_csv = content_csv.replace('\n', '\\n')
         # Decode the CSV string
