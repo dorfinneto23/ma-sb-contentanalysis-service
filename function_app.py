@@ -87,13 +87,13 @@ def check_openai_available_resurces(table_name, partition_key, row_key,contentTo
         totalRequests = currentlyRequests+1
         logging.info(f"get_openai_tokens_usage:currentlyTokens: {currentlyTokens},currentlyRequests: {currentlyRequests},requestsPerMinute: {requestsPerMinute},tokensPerMinute: {tokensPerMinute}")
         if ((totalTokens>tokensPerMinute*0.7) or (totalTokens == tokensPerMinute*0.7)):
-            logging.info(f"waiting one minute - total tokens exceed the maximum limitation of openai,totalTokens:{totalTokens},maximum:{tokensPerMinute} ")
+            logging.info(f"waiting two minute - total tokens exceed the maximum limitation of openai,totalTokens:{totalTokens},maximum:{tokensPerMinute} ")
             # Wait for 120 seconds
             time.sleep(120)
             reset_tokens_requests_usage(table_name, partition_key, row_key)
             return True
         elif ((totalRequests>requestsPerMinute*0.7) or (totalRequests == requestsPerMinute*0.7)):
-            logging.info(f"waiting one minute - total Requests  exceed the maximum limitation of openai,totalRequests:{totalRequests},maximum:{requestsPerMinute} ")
+            logging.info(f"waiting two minute - total Requests  exceed the maximum limitation of openai,totalRequests:{totalRequests},maximum:{requestsPerMinute} ")
             # Wait for 120 seconds
             time.sleep(120)
             reset_tokens_requests_usage(table_name, partition_key, row_key)
