@@ -456,59 +456,63 @@ app = func.FunctionApp()
 @app.service_bus_queue_trigger(arg_name="azservicebus", queue_name="contentanalysis",
                                connection="medicalanalysis_SERVICEBUS") 
 def sbcontentanalysisservice(azservicebus: func.ServiceBusMessage):
-    message_data = azservicebus.get_body().decode('utf-8')
-    logging.info(f"Received messageesds: {message_data}")
-    message_data_dict = json.loads(message_data)
-    caseid = message_data_dict['caseid']
-    doc_id = message_data_dict['doc_id']
-    path = message_data_dict['path']
-    pagenumber = message_data_dict['pagenumber']
-    totalpages = message_data_dict['totalpages']
-    pageTokens = int(message_data_dict['pageTokens'])
-    filename = message_data_dict['filename']
-    availableResurces = check_openai_available_resurces("openaiRequestsMng", openai_model, "1",pageTokens)
-    logging.info(f"availableResurces: {availableResurces}")
-    update_openaiRequestsMng("openaiRequestsMng",openai_model,"1",pageTokens)
-    openai_result = openai_content_analysis(path,caseid)
-    openai_result_dict = json.loads(openai_result) 
-    if openai_result_dict['status']=="success":
-        openai_content = openai_result_dict['response']
-        logging.info(f"openai_content: {openai_content}")
-        openai_content_cleaned = clean_json(openai_content)
-        save_openai_response(openai_content_cleaned,caseid,filename)
-        #clinicData = json.loads(openai_content_cleaned)
-        # Extract unique ClinicalArea values
-        #clinical_areas = set(diagnosis["clinicalarea"] for diagnosis in clinicData["diagnoses"])
-        # Concatenate unique ClinicalArea values into a single string
-        #clinical_areas_concatenated = ';'.join(clinical_areas)
-        clinical_areas_concatenated="" #need to delete 
-        #logging.info(f"clinical_areas_concatenated: {clinical_areas_concatenated}")
-        content_csv = json_to_csv(openai_content_cleaned,pagenumber)
-        # Encode the CSV string to preserve newlines
-        encoded_content_csv = content_csv.replace('\n', '\\n')
-        # Decode the CSV string
-        #retrieved_csv = encoded_content_csv.replace('\\n', '\n') -- for testing retrieving csv
-        update_documents_entity_field("documents", caseid, doc_id, "contentAnalysisJson", openai_content_cleaned,"clinicAreas",clinical_areas_concatenated,"status",4,"contentAnalysisCsv",encoded_content_csv)
-        #preparing data for service bus
-        data = { 
-                "doc_id" : doc_id, 
-                "storageTable" :"documents",
-                "caseid" :caseid,
-                "pagenumber" :pagenumber,
-                "totalpages" :totalpages
-            } 
-        json_data = json.dumps(data)
-        create_servicebus_event("clinicareasconsolidation",json_data)
-        logging.info(f"service bus event sent")
-        pages_done = count_rows_in_partition("documents",caseid) # check how many pages proccess done 
-        if pages_done==totalpages: #check if the last file passed 
-            update_case_generic(caseid,"status",7,"contentAnalysis",1) #update case status to 7 "content analysis done"
-            logging.info(f"content analysis process - done")
-        else:
-            logging.info(f"content analysis on {pagenumber} out of {totalpages} - done")
+    try:
+        message_data = azservicebus.get_body().decode('utf-8')
+        logging.info(f"Received messageesds: {message_data}")
+        message_data_dict = json.loads(message_data)
+        caseid = message_data_dict['caseid']
+        doc_id = message_data_dict['doc_id']
+        path = message_data_dict['path']
+        pagenumber = message_data_dict['pagenumber']
+        totalpages = message_data_dict['totalpages']
+        pageTokens = int(message_data_dict['pageTokens'])
+        filename = message_data_dict['filename']
+        availableResurces = check_openai_available_resurces("openaiRequestsMng", openai_model, "1",pageTokens)
+        logging.info(f"availableResurces: {availableResurces}")
+        update_openaiRequestsMng("openaiRequestsMng",openai_model,"1",pageTokens)
+        openai_result = openai_content_analysis(path,caseid)
+        openai_result_dict = json.loads(openai_result) 
+        
+        if openai_result_dict['status']=="success":
+            openai_content = openai_result_dict['response']
+            logging.info(f"openai_content: {openai_content}")
+            openai_content_cleaned = clean_json(openai_content)
+            save_openai_response(openai_content_cleaned,caseid,filename)
+            #clinicData = json.loads(openai_content_cleaned)
+            # Extract unique ClinicalArea values
+            #clinical_areas = set(diagnosis["clinicalarea"] for diagnosis in clinicData["diagnoses"])
+            # Concatenate unique ClinicalArea values into a single string
+            #clinical_areas_concatenated = ';'.join(clinical_areas)
+            clinical_areas_concatenated="" #need to delete 
+            #logging.info(f"clinical_areas_concatenated: {clinical_areas_concatenated}")
+            content_csv = json_to_csv(openai_content_cleaned,pagenumber)
+            # Encode the CSV string to preserve newlines
+            encoded_content_csv = content_csv.replace('\n', '\\n')
+            # Decode the CSV string
+            #retrieved_csv = encoded_content_csv.replace('\\n', '\n') -- for testing retrieving csv
+            update_documents_entity_field("documents", caseid, doc_id, "contentAnalysisJson", openai_content_cleaned,"clinicAreas",clinical_areas_concatenated,"status",4,"contentAnalysisCsv",encoded_content_csv)
+            #preparing data for service bus
+            data = { 
+                    "doc_id" : doc_id, 
+                    "storageTable" :"documents",
+                    "caseid" :caseid,
+                    "pagenumber" :pagenumber,
+                    "totalpages" :totalpages
+                } 
+            json_data = json.dumps(data)
+            create_servicebus_event("clinicareasconsolidation",json_data)
+            logging.info(f"service bus event sent")
+            pages_done = count_rows_in_partition("documents",caseid) # check how many pages proccess done 
+            if pages_done==totalpages: #check if the last file passed 
+                update_case_generic(caseid,"status",7,"contentAnalysis",1) #update case status to 7 "content analysis done"
+                logging.info(f"content analysis process - done")
+            else:
+                logging.info(f"content analysis on {pagenumber} out of {totalpages} - done")
 
-    else: 
-        logging.info(f"openai not content response - error message, {openai_result}")
+        else: 
+            logging.error(f"openai not content response - error message, {openai_result}")
+    except Exception as e:
+     logging.error(f"content analysis failed , {str(e)}")
     
 
 
