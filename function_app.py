@@ -36,6 +36,28 @@ driver= '{ODBC Driver 18 for SQL Server}'
 
 
 
+
+
+#save Content Analysis content 
+def save_ContentAnalysis(content,caseid,filename):
+    try:
+        logging.info(f"save_ContentByClinicAreas start, content: {content},caseid: {caseid},filename: {filename}")
+        container_name = "medicalanalysis"
+        main_folder_name = "cases"
+        folder_name="case-"+caseid
+        blob_service_client = BlobServiceClient.from_connection_string(connection_string_blob)
+        container_client = blob_service_client.get_container_client(container_name)
+        basicPath = f"{main_folder_name}/{folder_name}"
+        destinationPath = f"{basicPath}/ContentAnalysis/{filename}"
+        # Upload the blob and overwrite if it already exists
+        blob_client = container_client.upload_blob(name=destinationPath, data=content, overwrite=True)
+        logging.info(f"the ContentAnalysis content file url is: {blob_client.url}")
+        return destinationPath
+    
+    except Exception as e:
+        print("An error occurred:", str(e))
+
+
 # Reset tokens and requests usage 
 def reset_tokens_requests_usage(table_name, partition_key, row_key):
 
@@ -363,7 +385,7 @@ def save_openai_response(content,caseid,filename):
 
 
 #Openai function - content analysis
-def openai_content_analysis(path, caseid):
+def openai_content_analysis(path):
     try:
         logging.info(f"openai_content_analysis function strating")
         container_name = "medicalanalysis"
@@ -478,13 +500,7 @@ def sbcontentanalysisservice(azservicebus: func.ServiceBusMessage):
             logging.info(f"openai_content: {openai_content}")
             openai_content_cleaned = clean_json(openai_content)
             save_openai_response(openai_content_cleaned,caseid,filename)
-            #clinicData = json.loads(openai_content_cleaned)
-            # Extract unique ClinicalArea values
-            #clinical_areas = set(diagnosis["clinicalarea"] for diagnosis in clinicData["diagnoses"])
-            # Concatenate unique ClinicalArea values into a single string
-            #clinical_areas_concatenated = ';'.join(clinical_areas)
             clinical_areas_concatenated="" #need to delete 
-            #logging.info(f"clinical_areas_concatenated: {clinical_areas_concatenated}")
             content_csv = json_to_csv(openai_content_cleaned,pagenumber)
             # Encode the CSV string to preserve newlines
             encoded_content_csv = content_csv.replace('\n', '\\n')
