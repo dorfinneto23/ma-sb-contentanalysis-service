@@ -491,7 +491,7 @@ def sbcontentanalysisservice(azservicebus: func.ServiceBusMessage):
         availableResurces = check_openai_available_resurces("openaiRequestsMng", openai_model, "1",pageTokens)
         logging.info(f"availableResurces: {availableResurces}")
         update_openaiRequestsMng("openaiRequestsMng",openai_model,"1",pageTokens)
-        openai_result = openai_content_analysis(path,caseid)
+        openai_result = openai_content_analysis(path)
         openai_result_dict = json.loads(openai_result) 
         
         if openai_result_dict['status']=="success":
