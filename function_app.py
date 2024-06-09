@@ -39,7 +39,7 @@ driver= '{ODBC Driver 18 for SQL Server}'
 
 
 #save Content Analysis content 
-def save_ContentAnalysis(content,caseid,filename):
+def save_ContentAnalysis(content,caseid,filename,folder):
     try:
         logging.info(f"save_ContentByClinicAreas start, content: {content},caseid: {caseid},filename: {filename}")
         container_name = "medicalanalysis"
@@ -48,7 +48,7 @@ def save_ContentAnalysis(content,caseid,filename):
         blob_service_client = BlobServiceClient.from_connection_string(connection_string_blob)
         container_client = blob_service_client.get_container_client(container_name)
         basicPath = f"{main_folder_name}/{folder_name}"
-        destinationPath = f"{basicPath}/ContentAnalysis/{filename}"
+        destinationPath = f"{basicPath}/{folder}/{filename}"
         # Upload the blob and overwrite if it already exists
         blob_client = container_client.upload_blob(name=destinationPath, data=content, overwrite=True)
         logging.info(f"the ContentAnalysis content file url is: {blob_client.url}")
@@ -287,7 +287,7 @@ def json_to_csv(json_string,pagenumber):
     return csv_string
 
 # Update field on specific entity/ row in storage table 
-def update_documents_entity_field(table_name, partition_key, row_key, field_name, new_value,field_name2,new_value2,field_name3,new_value3,field_name4,new_value4):
+def update_documents_entity_field(table_name, partition_key, row_key, field_name, new_value,field_name2,new_value2,field_name3,new_value3):
 
     try:
         # Create a TableServiceClient using the connection string
@@ -303,7 +303,6 @@ def update_documents_entity_field(table_name, partition_key, row_key, field_name
         entity[field_name] = new_value
         entity[field_name2] = new_value2
         entity[field_name3] = new_value3
-        entity[field_name4] = new_value4
 
         # Update the entity in the table
         table_client.update_entity(entity, mode=UpdateMode.REPLACE)
@@ -499,14 +498,16 @@ def sbcontentanalysisservice(azservicebus: func.ServiceBusMessage):
             openai_content = openai_result_dict['response']
             logging.info(f"openai_content: {openai_content}")
             openai_content_cleaned = clean_json(openai_content)
-            save_openai_response(openai_content_cleaned,caseid,filename)
-            clinical_areas_concatenated="" #need to delete 
+            #save_openai_response(openai_content_cleaned,caseid,filename)
+            # Encode the CSV string to preserve newlines and save file on storage folder
+            ContentAnalysis_json_path = save_ContentAnalysis(openai_content_cleaned,caseid,filename,"openai/json")
             content_csv = json_to_csv(openai_content_cleaned,pagenumber)
-            # Encode the CSV string to preserve newlines
+            # Encode the CSV string to preserve newlines and save file on storage folder
             encoded_content_csv = content_csv.replace('\n', '\\n')
+            ContentAnalysis_csv_path = save_ContentAnalysis(encoded_content_csv,caseid,filename,"openai/csv")
             # Decode the CSV string
             #retrieved_csv = encoded_content_csv.replace('\\n', '\n') -- for testing retrieving csv
-            update_documents_entity_field("documents", caseid, doc_id, "contentAnalysisJson", openai_content_cleaned,"clinicAreas",clinical_areas_concatenated,"status",4,"contentAnalysisCsv",encoded_content_csv)
+            update_documents_entity_field("documents", caseid, doc_id, "contentAnalysisJson", ContentAnalysis_json_path,"status",4,"contentAnalysisCsv",ContentAnalysis_csv_path)
             #preparing data for service bus
             data = { 
                     "doc_id" : doc_id, 
