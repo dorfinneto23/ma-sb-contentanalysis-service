@@ -11,6 +11,7 @@ from azure.data.tables import TableServiceClient, TableClient, UpdateMode # in o
 from azure.core.exceptions import ResourceExistsError, ResourceNotFoundError # in order to use azure storage table  exceptions 
 import csv #helping convert json to csv
 import time # in order to wait one minute on check_openai_available_resurces function 
+import tiktoken # in order to calculate tokens 
 
 #Azure Blob Storage connection string
 connection_string_blob = os.environ.get('BlobStorageConnString')
@@ -36,7 +37,16 @@ driver= '{ODBC Driver 18 for SQL Server}'
 
 
 
-
+##count tokens 
+def count_gpt_tokens(string, model_name='gpt-4'):
+    # Initialize the tokenizer for the specified model
+    encoding = tiktoken.encoding_for_model(model_name)
+    
+    # Encode the string into tokens
+    tokens = encoding.encode(string)
+    
+    # Return the number of tokens
+    return len(tokens)
 
 #save Content Analysis content 
 def save_ContentAnalysis(content,caseid,filename,folder):
@@ -107,17 +117,19 @@ def check_openai_available_resurces(table_name, partition_key, row_key,contentTo
         tokensPerMinute = entity.get('tokensPerMinute')
         totalTokens= currentlyTokens+contentTokens
         totalRequests = currentlyRequests+1
+        saveSideReduction = 0.8
+        sleepTime = 100
         logging.info(f"get_openai_tokens_usage:currentlyTokens: {currentlyTokens},currentlyRequests: {currentlyRequests},requestsPerMinute: {requestsPerMinute},tokensPerMinute: {tokensPerMinute}")
-        if ((totalTokens>tokensPerMinute*0.7) or (totalTokens == tokensPerMinute*0.7)):
+        if ((totalTokens>tokensPerMinute*saveSideReduction) or (totalTokens == tokensPerMinute*saveSideReduction)):
             logging.info(f"waiting two minute - total tokens exceed the maximum limitation of openai,totalTokens:{totalTokens},maximum:{tokensPerMinute} ")
-            # Wait for 120 seconds
-            time.sleep(120)
+            # Wait for sleepTime seconds
+            time.sleep(sleepTime)
             reset_tokens_requests_usage(table_name, partition_key, row_key)
             return True
-        elif ((totalRequests>requestsPerMinute*0.7) or (totalRequests == requestsPerMinute*0.7)):
+        elif ((totalRequests>requestsPerMinute*saveSideReduction) or (totalRequests == requestsPerMinute*saveSideReduction)):
             logging.info(f"waiting two minute - total Requests  exceed the maximum limitation of openai,totalRequests:{totalRequests},maximum:{requestsPerMinute} ")
-            # Wait for 120 seconds
-            time.sleep(120)
+            # Wait for sleepTime seconds
+            time.sleep(sleepTime)
             reset_tokens_requests_usage(table_name, partition_key, row_key)
             return True
         else:
@@ -496,9 +508,11 @@ def sbcontentanalysisservice(azservicebus: func.ServiceBusMessage):
         
         if openai_result_dict['status']=="success":
             openai_content = openai_result_dict['response']
+            #update Tokens
+            responseTokens = count_gpt_tokens(openai_content)
+            update_openaiRequestsMng("openaiRequestsMng",openai_model,"1",responseTokens)
             logging.info(f"openai_content: {openai_content}")
             openai_content_cleaned = clean_json(openai_content)
-            #save_openai_response(openai_content_cleaned,caseid,filename)
             # Encode the CSV string to preserve newlines and save file on storage folder
             ContentAnalysis_json_path = save_ContentAnalysis(openai_content_cleaned,caseid,filename,"openai/json")
             content_csv = json_to_csv(openai_content_cleaned,pagenumber)
