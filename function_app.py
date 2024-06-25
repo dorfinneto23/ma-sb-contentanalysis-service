@@ -37,6 +37,32 @@ driver= '{ODBC Driver 18 for SQL Server}'
 
 
 
+# Update field on specific entity/ row in storage table 
+def update_entity_field(table_name, partition_key, row_key, field_name, new_value,field_name2, new_value2):
+
+    try:
+        # Create a TableServiceClient using the connection string
+        table_service_client = TableServiceClient.from_connection_string(conn_str=connection_string_blob)
+
+        # Get a TableClient
+        table_client = table_service_client.get_table_client(table_name)
+
+        # Retrieve the entity
+        entity = table_client.get_entity(partition_key, row_key)
+
+        # Update the field
+        entity[field_name] = new_value
+        entity[field_name2] = new_value2
+
+        # Update the entity in the table
+        table_client.update_entity(entity, mode=UpdateMode.REPLACE)
+        logging.info(f"update_entity_field:Entity updated successfully.")
+
+    except ResourceNotFoundError:
+        logging.info(f"The entity with PartitionKey '{partition_key}' and RowKey '{row_key}' was not found.")
+    except Exception as e:
+        logging.info(f"An error occurred: {e}")
+
 ##count tokens 
 def count_gpt_tokens(string, model_name='gpt-4'):
     # Initialize the tokenizer for the specified model
@@ -536,6 +562,7 @@ def sbcontentanalysisservice(azservicebus: func.ServiceBusMessage):
             pages_done = count_rows_in_partition("documents",caseid) # check how many pages proccess done 
             if pages_done==totalpages: #check if the last file passed 
                 update_case_generic(caseid,"status",7,"contentAnalysis",1) #update case status to 7 "content analysis done"
+                update_entity_field("cases", caseid, "1", "status",7,"contentAnalysis",1) #update case status to 7 "content analysis done"
                 logging.info(f"content analysis process - done")
             else:
                 logging.info(f"content analysis on {pagenumber} out of {totalpages} - done")
