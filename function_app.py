@@ -4,7 +4,6 @@ import os #in order to get parameters values from azure function app enviroment 
 from azure.storage.blob import BlobServiceClient, BlobClient, ContainerClient # in order to use azure container storage
 import io # in order to download pdf to memory and write into memory without disk permission needed 
 import json # in order to use json 
-import pyodbc #for sql connections 
 from azure.servicebus import ServiceBusClient, ServiceBusMessage # in order to use azure service bus 
 from openai import AzureOpenAI #for using openai services 
 from azure.data.tables import TableServiceClient, TableClient, UpdateMode # in order to use azure storage table  
@@ -28,12 +27,6 @@ client = AzureOpenAI(
 
 openai_model = "ProofitGPT4o"
 
-# Define connection details
-server = 'medicalanalysis-sqlserver.database.windows.net'
-database = 'medicalanalysis'
-username = os.environ.get('sql_username')
-password = os.environ.get('sql_password')
-driver= '{ODBC Driver 18 for SQL Server}'
 
 
 
@@ -351,26 +344,6 @@ def update_documents_entity_field(table_name, partition_key, row_key, field_name
     except Exception as e:
         logging.info(f"An error occurred: {e}")
 
-# Generic Function to update case  in the 'cases' table
-def update_case_generic(caseid,field,value,field2,value2):
-    try:
-        # Establish a connection to the Azure SQL database
-        conn = pyodbc.connect('DRIVER='+driver+';SERVER='+server+';DATABASE='+database+';UID='+username+';PWD='+ password)
-        cursor = conn.cursor()
-
-        # Insert new case data into the 'cases' table
-        cursor.execute(f"UPDATE cases SET {field} = ? ,{field2} = ?  WHERE id = ?", (value,value2, caseid))
-        conn.commit()
-
-        # Close connections
-        cursor.close()
-        conn.close()
-        
-        logging.info(f"case {caseid} updated field name: {field} , value: {value}")
-        return True
-    except Exception as e:
-        logging.error(f"Error update case: {str(e)}")
-        return False    
 
 # Clean Json string - clean spaces  if cant clean return the same value 
 def clean_json(json_string):
@@ -561,7 +534,6 @@ def sbcontentanalysisservice(azservicebus: func.ServiceBusMessage):
             logging.info(f"service bus event sent")
             pages_done = count_rows_in_partition("documents",caseid) # check how many pages proccess done 
             if pages_done==totalpages: #check if the last file passed 
-                update_case_generic(caseid,"status",7,"contentAnalysis",1) #update case status to 7 "content analysis done"
                 update_entity_field("cases", caseid, "1", "status",7,"contentAnalysis",1) #update case status to 7 "content analysis done"
                 logging.info(f"content analysis process - done")
             else:
