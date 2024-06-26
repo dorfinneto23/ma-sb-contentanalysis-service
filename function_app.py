@@ -424,62 +424,14 @@ def openai_content_analysis(path):
         filecontent  = download_stream.read().decode('utf-8')
         logging.info(f"data from the txt file is {filecontent}")
         mission = f"The mission based on the uploaded file is as follows:\n{filecontent}\nPlease provide insights based on this information."
+        missionDescription = get_openai_task()
         #chat request for content analysis 
         response = client.chat.completions.create(
                     model=openai_model,
                     response_format={ "type": "json_object" },
                     messages=[
                         {"role": "system", "content": mission},
-                        {"role": "user", "content": """**Task Summary:**
-                            Your task is to review a set of files to identify and document medical information. You need to extract:
-                            - Diagnosis summaries
-                            - Severity, stage, or level of each diagnosis, if available
-                            - Diagnosis dates, if mentioned
-                            - Prescribed or recommended treatments
-                            **Step-by-Step Guide:**
-                            1. **Review Files:** Carefully examine all provided files to find any medical diagnoses.
-                            2. **Extract Information:** Record the following for each diagnosis:
-                            - Diagnosis name.
-                            - Severity, stage, or level (if specified).
-                            - Date of diagnosis (if mentioned).
-                            - Recommended or current treatments.
-                            3. **Categorize Diagnoses:** Group the extracted diagnoses into the following clinical areas:
-                            - Blood_and_Coagulation
-                            - Cardiovascular
-                            - Diabetes 
-                            - Neurology
-                            - Skin_and_Scars
-                            - Endocrinology_excluding_Diabetes
-                            - Gastroenterology
-                            - Ears
-                            - Lungs_excluding_Asthma
-                            - Asthma
-                            - Eyes
-                            - Visual_Impairment
-                            - Oral_and_Maxillofacial
-                            - Psychiatry_and_ADHD
-                            - Urogenital
-                            - Orthopedics_and_Trauma
-                            - Nose_Mouth_and_Throat
-                            - Organ_Transplantation
-                            4. **Prepare JSON Output:** Organize the collected information into a JSON format with the following structure:
-                            - File number
-                            - Diagnosis details, including name, diagnosis date, severity/level/stage, and treatment
-                            - Associated clinical area
-                            **Example JSON Structure:**
-                            {
-                            "FileNumber": "123456",
-                            "Diagnoses": [
-                                {
-                                "Diagnosis": "Diabetes",
-                                "DateOfDiagnosis": "1998",
-                                "LevelStageSeverity": "episode of metabolic acidosis",
-                                "Treatment": "insulin dependent",
-                                "ClinicalArea": "Diabetes"
-                                }
-                            ]
-                            }
-                            """}
+                        {"role": "user", "content":missionDescription}
                     ]
                 )
         logging.info(f"Response from openai: {response.choices[0].message.content}")
@@ -522,7 +474,6 @@ def sbcontentanalysisservice(azservicebus: func.ServiceBusMessage):
         update_openaiRequestsMng("openaiRequestsMng",openai_model,"1",pageTokens)
         openai_result = openai_content_analysis(path)
         openai_result_dict = json.loads(openai_result) 
-        get_openai_task()
         if openai_result_dict['status']=="success":
             openai_content = openai_result_dict['response']
             #update Tokens
