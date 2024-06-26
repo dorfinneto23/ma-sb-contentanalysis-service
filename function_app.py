@@ -29,6 +29,24 @@ openai_model = "ProofitGPT4o"
 
 
 
+# get the openai task description 
+def get_openai_task():
+    try:
+        path = "configuration/contentAnalysis_OpenAI_Task.txt"
+        logging.info(f"get_content function strating, path value: {path}")
+        container_name = "medicalanalysis"
+        blob_service_client = BlobServiceClient.from_connection_string(connection_string_blob)
+        container_client = blob_service_client.get_container_client(container_name)
+        blob_client = container_client.get_blob_client(path)
+        download_stream = blob_client.download_blob()
+        filecontent  = download_stream.read().decode('utf-8')
+        logging.info(f"get_content: data from the txt file is {filecontent}")
+        return filecontent
+    except Exception as e:
+        logging.error(f"get_content: Error update case: {str(e)}")
+        return None    
+    
+
 
 # Update field on specific entity/ row in storage table 
 def update_entity_field(table_name, partition_key, row_key, field_name, new_value,field_name2, new_value2):
@@ -504,7 +522,7 @@ def sbcontentanalysisservice(azservicebus: func.ServiceBusMessage):
         update_openaiRequestsMng("openaiRequestsMng",openai_model,"1",pageTokens)
         openai_result = openai_content_analysis(path)
         openai_result_dict = json.loads(openai_result) 
-        
+        get_openai_task()
         if openai_result_dict['status']=="success":
             openai_content = openai_result_dict['response']
             #update Tokens
